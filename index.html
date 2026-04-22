@@ -198,7 +198,7 @@ body {
         <div>
           <div class="flex items-center gap-2">
             <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">首选推荐</span>
-            <span class="px-1.5 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">全程晴好</span>
+            <span id="rec-badge" class="px-1.5 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">全程晴好</span>
           </div>
           <h2 id="rec-name" class="text-lg font-bold text-white">五台山大朝台</h2>
         </div>
@@ -398,6 +398,7 @@ function renderRecommendation() {
 
   document.getElementById('recommendation-banner').classList.remove('hidden');
   document.getElementById('rec-name').textContent = dest.name;
+  document.getElementById('rec-badge').textContent = rec.badge;
 
   const globalLow = Math.min(...dest.weather.map(w => w.low));
   const globalHigh = Math.max(...dest.weather.map(w => w.high));
