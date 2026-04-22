@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>五一假期 · 徒步露营计划</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        bg: '#050914',
+        surface: 'rgba(255,255,255,0.03)',
+        surfaceHover: 'rgba(255,255,255,0.06)',
+        border: 'rgba(255,255,255,0.06)',
+        primary: '#38bdf8',
+        accent: '#f59e0b',
+      }
+    }
+  }
+}
+</script>
+<style>
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+body {
+  background-color: #050914;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(56,189,248,0.12), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 100%, rgba(245,158,11,0.06), transparent);
+  color: #e2e8f0;
+  font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.glass {
+  background: rgba(255,255,255,0.03);
+  backdrop-filter: blur(20px) saturate(1.2);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.glass-strong {
+  background: rgba(15,23,42,0.7);
+  backdrop-filter: blur(24px) saturate(1.3);
+  -webkit-backdrop-filter: blur(24px) saturate(1.3);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 20px 40px -12px rgba(0,0,0,0.5);
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.weather-sunny { color: #fbbf24; }
+.weather-cloudy { color: #94a3b8; }
+.weather-overcast { color: #64748b; }
+.weather-rain { color: #60a5fa; }
+.weather-shower { color: #3b82f6; }
+.filter-btn.active {
+  background: rgba(56,189,248,0.15);
+  border-color: rgba(56,189,248,0.4);
+  color: #38bdf8;
+}
+.filter-btn {
+  transition: all 0.2s ease;
+}
+.expand-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.expand-content.open {
+  max-height: 800px;
+}
+.province-shanxi { --p-color: #f59e0b; }
+.province-yunnan { --p-color: #10b981; }
+.province-guizhou { --p-color: #8b5cf6; }
+.province-guangxi { --p-color: #06b6d4; }
+.province-hunan { --p-color: #f97316; }
+.province-guangdong { --p-color: #ef4444; }
+.province-tag {
+  background: color-mix(in srgb, var(--p-color) 15%, transparent);
+  color: var(--p-color);
+  border: 1px solid color-mix(in srgb, var(--p-color) 25%, transparent);
+}
+.province-line {
+  background: var(--p-color);
+}
+.hero-glow {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56,189,248,0.15) 0%, transparent 70%);
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: #38bdf8;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Loading Screen -->
+<div id="loading-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center" style="background:#050914">
+  <div class="loader mb-4"></div>
+  <p class="text-sm text-slate-500">加载行程数据中...</p>
+</div>
+
+<!-- Error Screen -->
+<div id="error-screen" class="fixed inset-0 z-[100] hidden flex-col items-center justify-center" style="background:#050914">
+  <i data-lucide="alert-circle" class="w-10 h-10 text-rose-400 mb-3"></i>
+  <p class="text-base text-slate-200 mb-2">数据加载失败</p>
+  <p class="text-sm text-slate-500 mb-4">请检查 data.json 文件是否存在且格式正确</p>
+  <button onclick="location.reload()" class="px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-slate-300 hover:bg-white/10 transition-colors">
+    刷新重试
+  </button>
+</div>
+
+<!-- Floating Nav -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass-strong">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <i data-lucide="mountain" class="w-5 h-5 text-sky-400"></i>
+      <span class="font-bold text-sm tracking-wide">五一徒步计划</span>
+    </div>
+    <div class="flex items-center gap-3 text-xs text-slate-400">
+      <span class="hidden sm:inline">5.1 — 5.5</span>
+      <span class="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2人</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="relative pt-32 pb-16 px-4 overflow-hidden">
+  <div class="hero-glow"></div>
+  <div class="max-w-4xl mx-auto text-center relative z-10">
+    <div id="hero-meta" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass text-xs text-slate-300 mb-6">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+      加载中...
+    </div>
+    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight mb-4">
+      <span class="bg-gradient-to-r from-sky-300 via-white to-amber-300 bg-clip-text text-transparent">五一假期</span>
+      <br class="sm:hidden">
+      <span class="text-slate-100">徒步露营计划</span>
+    </h1>
+    <p id="hero-subtitle" class="text-slate-400 text-base sm:text-lg max-w-2xl mx-auto mb-8">加载中...</p>
+    <div id="hero-stats" class="flex flex-wrap justify-center gap-3">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+</header>
+
+<!-- Top Recommendation Banner -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 mb-10">
+  <div id="recommendation-banner" class="relative overflow-hidden rounded-2xl glass border-amber-500/20 hidden" style="border-color: rgba(245,158,11,0.2);">
+    <div class="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-transparent"></div>
+    <div class="relative p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <i data-lucide="crown" class="w-6 h-6 text-white"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider">首选推荐</span>
+            <span class="px-1.5 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">全程晴好</span>
+          </div>
+          <h2 id="rec-name" class="text-lg font-bold text-white">五台山大朝台</h2>
+        </div>
+      </div>
+      <div class="flex-1 w-full sm:w-auto">
+        <div id="rec-details" class="flex items-center justify-between sm:justify-end gap-4 text-sm text-slate-300">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Filter Bar -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 mb-8">
+  <div class="flex flex-wrap items-center gap-2">
+    <span class="text-xs text-slate-500 font-medium mr-1">筛选</span>
+    <button class="filter-btn active px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300" onclick="filterDests('all', this)">全部</button>
+    <button class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300" onclick="filterDests('shanxi', this)">山西</button>
+    <button class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300" onclick="filterDests('yunnan', this)">云南</button>
+    <button class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300" onclick="filterDests('guizhou', this)">贵州</button>
+    <button class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300" onclick="filterDests('guangxi', this)">广西</button>
+    <button class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300" onclick="filterDests('hunan', this)">湖南</button>
+    <button class="filter-btn px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300" onclick="filterDests('guangdong', this)">广东</button>
+  </div>
+</section>
+
+<!-- Destinations Grid -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div id="destinations-grid" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+    <!-- Cards will be injected here -->
+  </div>
+</section>
+
+<!-- Transport Overview -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
+      <i data-lucide="train-front" class="w-4 h-4 text-sky-400"></i>
+    </div>
+    <h2 class="text-xl font-bold text-white">广州出发 · 交通方案总览</h2>
+    <span class="text-xs text-slate-500">12 条路线对比</span>
+  </div>
+
+  <!-- Sort controls -->
+  <div class="flex gap-2 mb-4">
+    <button onclick="sortTransport('time')" class="px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 transition-colors" id="sort-time">
+      <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> 按耗时排序</span>
+    </button>
+    <button onclick="sortTransport('cost')" class="px-3 py-1.5 rounded-lg text-xs font-medium border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10 transition-colors" id="sort-cost">
+      <span class="flex items-center gap-1"><i data-lucide="banknote" class="w-3 h-3"></i> 按价格排序</span>
+    </button>
+  </div>
+
+  <div class="glass rounded-2xl overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left">
+        <thead class="text-xs text-slate-500 uppercase bg-white/5">
+          <tr>
+            <th class="px-4 py-3 font-medium">目的地</th>
+            <th class="px-4 py-3 font-medium">推荐路线</th>
+            <th class="px-4 py-3 font-medium">亮点提示</th>
+            <th class="px-4 py-3 text-right font-medium">总耗时</th>
+            <th class="px-4 py-3 text-right font-medium">人均</th>
+          </tr>
+        </thead>
+        <tbody id="transport-overview-body" class="divide-y divide-white/5">
+          <!-- Injected via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- Gear Section -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 mb-16">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+      <i data-lucide="backpack" class="w-4 h-4 text-violet-400"></i>
+    </div>
+    <h2 class="text-xl font-bold text-white">装备清单</h2>
+    <span class="text-xs text-slate-500">预估总重约 8-10kg</span>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <!-- Clothing -->
+    <div class="glass rounded-2xl p-5 card-hover">
+      <div class="flex items-center gap-2 mb-4">
+        <i data-lucide="shirt" class="w-4 h-4 text-sky-400"></i>
+        <h3 class="font-semibold text-sm text-slate-200">着装层</h3>
+        <span class="ml-auto text-xs text-slate-500">11 项</span>
+      </div>
+      <div class="space-y-2.5" id="gear-clothing">
+        <!-- Injected via JS -->
+      </div>
+      <div class="mt-4 pt-3 border-t border-white/5 flex justify-between text-xs">
+        <span class="text-slate-500">小计</span>
+        <span class="text-sky-400 font-semibold">¥3,050</span>
+      </div>
+    </div>
+
+    <!-- Hiking Gear -->
+    <div class="glass rounded-2xl p-5 card-hover">
+      <div class="flex items-center gap-2 mb-4">
+        <i data-lucide="tent" class="w-4 h-4 text-amber-400"></i>
+        <h3 class="font-semibold text-sm text-slate-200">徒步装备</h3>
+        <span class="ml-auto text-xs text-slate-500">7 项</span>
+      </div>
+      <div class="space-y-2.5" id="gear-hiking">
+        <!-- Injected via JS -->
+      </div>
+      <div class="mt-4 pt-3 border-t border-white/5 flex justify-between text-xs">
+        <span class="text-slate-500">小计</span>
+        <span class="text-amber-400 font-semibold">¥5,599+</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Todo Progress -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 mb-20">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+      <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-400"></i>
+    </div>
+    <h2 class="text-xl font-bold text-white">待确认事项</h2>
+    <span id="todo-count" class="text-xs text-slate-500">加载中...</span>
+  </div>
+
+  <div class="glass rounded-2xl p-5 sm:p-6">
+    <div class="w-full h-2 rounded-full bg-white/5 mb-6 overflow-hidden">
+      <div id="todo-progress" class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-sky-400 transition-all duration-1000" style="width: 0%"></div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" id="todo-list">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="border-t border-white/5 py-8 text-center text-xs text-slate-600">
+  <p>数据来源：和风天气 · 携程 · <span id="footer-date">—</span>更新</p>
+</footer>
+
+<script>
+// Global app data
+let appData = null;
+let currentTransportSort = 'default';
+
+// Initialize Lucide icons
+lucide.createIcons();
+
+function getWeatherClass(icon) {
+  if (icon.includes('晴') || icon === '🌤️') return 'weather-sunny';
+  if (icon === '⛅') return 'weather-cloudy';
+  if (icon === '☁️') return 'weather-overcast';
+  if (icon === '🌦️') return 'weather-shower';
+  return 'weather-rain';
+}
+
+function renderHero() {
+  const meta = appData.meta;
+  document.getElementById('hero-meta').innerHTML = `
+    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+    更新于 ${meta.updated}
+  `;
+  document.getElementById('hero-subtitle').textContent = meta.subtitle;
+
+  const destCount = appData.destinations.length;
+  const best = appData.destinations.find(d => d.tags.includes('⭐天气最佳'));
+  const bestName = best ? best.name : '五台山';
+
+  document.getElementById('hero-stats').innerHTML = `
+    <div class="glass px-4 py-2 rounded-xl flex items-center gap-2 animate-fade-in-up stagger-1">
+      <i data-lucide="map-pin" class="w-4 h-4 text-rose-400"></i>
+      <span class="text-sm font-medium">${destCount} 目的地</span>
+    </div>
+    <div class="glass px-4 py-2 rounded-xl flex items-center gap-2 animate-fade-in-up stagger-2">
+      <i data-lucide="calendar" class="w-4 h-4 text-sky-400"></i>
+      <span class="text-sm font-medium">${meta.dates}</span>
+    </div>
+    <div class="glass px-4 py-2 rounded-xl flex items-center gap-2 animate-fade-in-up stagger-3">
+      <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+      <span class="text-sm font-medium">${meta.people} 人同行</span>
+    </div>
+    <div class="glass px-4 py-2 rounded-xl flex items-center gap-2 animate-fade-in-up stagger-4">
+      <i data-lucide="sun" class="w-4 h-4 text-amber-400"></i>
+      <span class="text-sm font-medium">${bestName}天气最优</span>
+    </div>
+  `;
+}
+
+function renderRecommendation() {
+  const rec = appData.recommendation;
+  const dest = appData.destinations.find(d => d.id === rec.id);
+  if (!dest) return;
+
+  document.getElementById('recommendation-banner').classList.remove('hidden');
+  document.getElementById('rec-name').textContent = dest.name;
+
+  const globalLow = Math.min(...dest.weather.map(w => w.low));
+  const globalHigh = Math.max(...dest.weather.map(w => w.high));
+
+  document.getElementById('rec-details').innerHTML = `
+    <span class="flex items-center gap-1"><i data-lucide="navigation" class="w-3.5 h-3.5 text-slate-400"></i> ${dest.provinceName}${dest.location.split('·')[0].replace(dest.provinceName, '').trim()}</span>
+    <span class="flex items-center gap-1"><i data-lucide="route" class="w-3.5 h-3.5 text-slate-400"></i> ${dest.location.includes('km') ? dest.location.match(/(\d+km)/)?.[0] || '' : ''}</span>
+    <span class="flex items-center gap-1"><i data-lucide="thermometer" class="w-3.5 h-3.5 text-slate-400"></i> ${globalLow}° ~ ${globalHigh}°</span>
+  `;
+}
+
+function renderDestinations(filter = 'all') {
+  const grid = document.getElementById('destinations-grid');
+  const filtered = filter === 'all' ? appData.destinations : appData.destinations.filter(d => d.province === filter);
+
+  grid.innerHTML = filtered.map((d, i) => {
+    const globalLow = Math.min(...d.weather.map(w => w.low));
+    const globalHigh = Math.max(...d.weather.map(w => w.high));
+    const hasBest = d.tags.some(t => t.includes('天气最佳'));
+    const tm = d.transportMeta || {};
+
+    return `
+    <div class="glass rounded-2xl overflow-hidden card-hover province-${d.province} animate-fade-in-up stagger-${(i%6)+1}" style="opacity:0">
+      <div class="h-1 province-line" style="width:100%"></div>
+      <div class="p-5">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="province-tag px-2 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wider">${d.provinceName}</span>
+              ${hasBest ? '<span class="px-1.5 py-0.5 rounded text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">⭐首选</span>' : ''}
+            </div>
+            <h3 class="text-lg font-bold text-white leading-tight">${d.name}</h3>
+            <p class="text-sm text-slate-400 mt-1">${d.location}</p>
+          </div>
+          <button onclick="toggleExpand(${d.id})" class="p-1.5 rounded-lg hover:bg-white/5 transition-colors" id="btn-${d.id}">
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform duration-300" id="icon-${d.id}"></i>
+          </button>
+        </div>
+
+        <!-- Weather Timeline -->
+        <div class="flex gap-1.5 mb-3">
+          ${d.weather.map(w => `
+            <div class="flex-1 text-center">
+              <div class="text-xs text-slate-500 mb-1">${w.d}</div>
+              <div class="text-lg mb-0.5">${w.icon}</div>
+              <div class="text-xs ${getWeatherClass(w.icon)} font-medium">${w.low}°</div>
+              <div class="text-xs text-slate-500">${w.high}°</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="flex items-center justify-between text-sm text-slate-500 mb-3">
+          <span>${d.lat}, ${d.lng}</span>
+          <span>${globalLow}° ~ ${globalHigh}°</span>
+        </div>
+
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-1.5">
+          ${d.tags.filter(t => !t.includes('天气最佳')).map(t => `
+            <span class="px-2 py-0.5 rounded-md text-xs bg-white/5 text-slate-400 border border-white/5">${t}</span>
+          `).join('')}
+        </div>
+
+        <!-- Transport Preview -->
+        ${tm.bestRoute ? `
+        <div class="mt-3 pt-3 border-t border-white/5">
+          <div class="flex items-center gap-2 mb-1.5">
+            <i data-lucide="navigation" class="w-3 h-3 text-slate-500"></i>
+            <span class="text-sm text-slate-500 font-medium">${tm.bestRoute}</span>
+          </div>
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-sky-400 font-semibold">${tm.fastest}</span>
+            <span class="text-slate-500">${tm.cheapest}</span>
+          </div>
+        </div>
+        ` : ''}
+      </div>
+
+      <!-- Expandable Transport -->
+      <div class="expand-content" id="expand-${d.id}">
+        <div class="px-5 pb-5 border-t border-white/5 pt-3">
+          <div class="flex items-center gap-1.5 mb-2">
+            <i data-lucide="route" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span class="text-sm font-semibold text-slate-300">交通方案</span>
+          </div>
+          <div class="space-y-2">
+            ${d.transport.map(t => `
+              <div class="flex gap-2 text-sm text-slate-400 leading-relaxed">
+                <span class="text-slate-500 font-medium shrink-0 w-6">${t.type}</span>
+                <span>${t.text}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+    `;
+  }).join('');
+
+  lucide.createIcons();
+}
+
+function toggleExpand(id) {
+  const el = document.getElementById('expand-' + id);
+  const icon = document.getElementById('icon-' + id);
+  el.classList.toggle('open');
+  icon.style.transform = el.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function filterDests(province, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDestinations(province);
+}
+
+function renderTransportOverview(sortBy = 'default') {
+  currentTransportSort = sortBy;
+  const tbody = document.getElementById('transport-overview-body');
+  let rows = [...appData.destinations];
+
+  if (sortBy === 'time') {
+    const timeMap = { '约2.5h':2.5,'约3.5h':3.5,'约5h':5,'约6h':6,'约7h':7,'约8h':8,'约12h':12 };
+    rows.sort((a,b) => (timeMap[a.transportMeta?.fastest]||99) - (timeMap[b.transportMeta?.fastest]||99));
+  } else if (sortBy === 'cost') {
+    const costMap = { '¥110起':110,'¥157起':157,'¥195起':195,'¥234起':234,'¥240起':240,'¥300起':300,'¥480起':480,'¥485起':485,'¥490起':490,'¥500起':500,'¥580起':580,'¥853起':853 };
+    rows.sort((a,b) => (costMap[a.transportMeta?.cheapest]||9999) - (costMap[b.transportMeta?.cheapest]||9999));
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const tm = r.transportMeta || {};
+    return `
+    <tr class="hover:bg-white/[0.02] transition-colors province-${r.province}">
+      <td class="px-4 py-3.5">
+        <div class="flex items-center gap-2">
+          <div class="w-1 h-8 rounded-full province-line"></div>
+          <div>
+            <div class="text-sm font-semibold text-white">${r.name}</div>
+            <div class="text-xs text-slate-500">${r.provinceName}</div>
+          </div>
+        </div>
+      </td>
+      <td class="px-4 py-3.5">
+        <div class="text-sm text-slate-300">${tm.bestRoute || '—'}</div>
+      </td>
+      <td class="px-4 py-3.5">
+        <div class="text-sm text-slate-500 max-w-[200px]">${tm.highlight || '—'}</div>
+      </td>
+      <td class="px-4 py-3.5 text-right">
+        <span class="text-sm font-semibold text-sky-400">${tm.fastest || '—'}</span>
+      </td>
+      <td class="px-4 py-3.5 text-right">
+        <span class="text-sm font-mono text-amber-400">${tm.cheapest || '—'}</span>
+      </td>
+    </tr>
+  `;
+  }).join('');
+}
+
+function sortTransport(type) {
+  document.getElementById('sort-time').classList.toggle('active', type === 'time');
+  document.getElementById('sort-time').classList.toggle('bg-sky-500/10', type === 'time');
+  document.getElementById('sort-time').classList.toggle('text-sky-400', type === 'time');
+  document.getElementById('sort-time').classList.toggle('border-sky-500/20', type === 'time');
+  document.getElementById('sort-cost').classList.toggle('active', type === 'cost');
+  document.getElementById('sort-cost').classList.toggle('bg-sky-500/10', type === 'cost');
+  document.getElementById('sort-cost').classList.toggle('text-sky-400', type === 'cost');
+  document.getElementById('sort-cost').classList.toggle('border-sky-500/20', type === 'cost');
+  renderTransportOverview(type);
+}
+
+function renderGear() {
+  const gear = appData.gear;
+
+  document.getElementById('gear-clothing').innerHTML = gear.clothing.map(g => `
+    <div class="flex items-center justify-between text-sm group">
+      <span class="text-slate-400 group-hover:text-slate-200 transition-colors">${g.name}</span>
+      <span class="text-slate-500 font-mono">¥${g.price}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('gear-hiking').innerHTML = gear.hiking.map(g => `
+    <div class="flex items-center justify-between text-sm group">
+      <span class="text-slate-400 group-hover:text-slate-200 transition-colors">${g.name}</span>
+      ${g.price ? `<span class="text-slate-500 font-mono">¥${g.price}</span>` : '<span class="text-slate-600">—</span>'}
+    </div>
+  `).join('');
+}
+
+function renderTodos() {
+  const todos = appData.todos;
+  const doneCount = todos.filter(t => t.done).length;
+  const percent = Math.round((doneCount / todos.length) * 100);
+
+  document.getElementById('todo-count').textContent = `${doneCount} / ${todos.length} 已完成`;
+  document.getElementById('todo-progress').style.width = percent + '%';
+
+  document.getElementById('todo-list').innerHTML = todos.map(t => `
+    <div class="flex items-center gap-3 p-3 rounded-xl ${t.done ? 'bg-emerald-500/5 border border-emerald-500/10' : 'bg-white/5 border border-white/5'}">
+      <div class="w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${t.done ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5 text-slate-600'}">
+        ${t.done ? '<i data-lucide="check" class="w-3 h-3"></i>' : '<div class="w-2 h-2 rounded-full bg-slate-600"></div>'}
+      </div>
+      <span class="text-sm ${t.done ? 'text-slate-400 line-through' : 'text-slate-200'}">${t.text}</span>
+    </div>
+  `).join('');
+}
+
+function renderAll() {
+  renderHero();
+  renderRecommendation();
+  renderDestinations();
+  renderTransportOverview();
+  renderGear();
+  renderTodos();
+  lucide.createIcons();
+
+  document.getElementById('footer-date').textContent = appData.meta.updated;
+}
+
+async function loadData() {
+  try {
+    const cacheBuster = '?v=' + Date.now();
+    const response = await fetch('data.json' + cacheBuster);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    appData = await response.json();
+
+    // Hide loading, show content
+    document.getElementById('loading-screen').classList.add('hidden');
+    renderAll();
+  } catch (err) {
+    console.error('Failed to load data:', err);
+    document.getElementById('loading-screen').classList.add('hidden');
+    document.getElementById('error-screen').classList.remove('hidden');
+    document.getElementById('error-screen').classList.add('flex');
+    lucide.createIcons();
+  }
+}
+
+// Init
+loadData();
+</script>
+</body>
+</html>
