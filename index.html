@@ -161,7 +161,7 @@ body {
     </div>
     <div class="flex items-center gap-3 text-xs text-slate-400">
       <span class="hidden sm:inline">5.1 — 5.5</span>
-      <span class="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2人</span>
+      <span id="people-count" class="px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2 人</span>
     </div>
   </div>
 </nav>
@@ -361,6 +361,7 @@ function getWeatherClass(icon) {
 
 function renderHero() {
   const meta = appData.meta;
+  document.getElementById('people-count').textContent = meta.people + ' 人';
   document.getElementById('hero-meta').innerHTML = `
     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
     更新于 ${meta.updated}
